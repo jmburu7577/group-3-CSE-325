@@ -24,23 +24,23 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Log into GHCR
+    - name: Log into Docker Hub
       uses: docker/login-action@v2
       with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        registry: docker.io
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Build and push image to GHCR
+    - name: Build and push image to Docker Hub
       uses: docker/build-push-action@v4
       with:
         context: .
         file: ./Dockerfile
         push: true
         tags: |
-          ghcr.io/${{ github.repository_owner }}/group-3-CSE-325:latest
-          ghcr.io/${{ github.repository_owner }}/group-3-CSE-325:sha-${{ github.sha }}
+          ${{ secrets.DOCKERHUB_USERNAME }}/group-3-CSE-325:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/group-3-CSE-325:sha-${{ github.sha }}
 
     - name: Smoke-test pushed image (pull SHA tag and run dotnet --info)
       run: |
-        docker run --rm ghcr.io/${{ github.repository_owner }}/group-3-CSE-325:sha-${{ github.sha }} dotnet --info
+        docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/group-3-CSE-325:sha-${{ github.sha }} dotnet --info
