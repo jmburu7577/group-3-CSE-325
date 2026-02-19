@@ -1,0 +1,41 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\AfyaConnectLite.bundle.scp.css",
+      "PackagePath": "staticwebassets\\AfyaConnectLite.bundle.scp.css"
+    },
+    {
+      "Id": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\app.css",
+      "PackagePath": "staticwebassets\\app.css"
+    },
+    {
+      "Id": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\bootstrap\\bootstrap.min.css",
+      "PackagePath": "staticwebassets\\bootstrap\\bootstrap.min.css"
+    },
+    {
+      "Id": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\bootstrap\\bootstrap.min.css.map",
+      "PackagePath": "staticwebassets\\bootstrap\\bootstrap.min.css.map"
+    },
+    {
+      "Id": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\favicon.png",
+      "PackagePath": "staticwebassets\\favicon.png"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.AfyaConnectLite.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.build.AfyaConnectLite.props",
+      "PackagePath": "build\\AfyaConnectLite.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildMultiTargeting.AfyaConnectLite.props",
+      "PackagePath": "buildMultiTargeting\\AfyaConnectLite.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildTransitive.AfyaConnectLite.props",
+      "PackagePath": "buildTransitive\\AfyaConnectLite.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

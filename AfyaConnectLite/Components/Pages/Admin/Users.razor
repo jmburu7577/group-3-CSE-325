@@ -1,0 +1,526 @@
+@page "/admin/users"
+@attribute [Authorize(Roles = "Admin")]
+@using AfyaConnectLite.Models
+@using AfyaConnectLite.Services
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@inject IUserService UserService
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>User Management - AfyaConnect Lite</PageTitle>
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h2>User Management</h2>
+            <p class="text-muted">Manage system users and doctor approvals</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="roleFilter" class="form-label">Filter by Role</label>
+                <select class="form-select" id="roleFilter" @bind="selectedRole">
+                    <option value="">All Roles</option>
+                    <option value="Patient">Patients</option>
+                    <option value="Doctor">Doctors</option>
+                    <option value="Admin">Administrators</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="statusFilter" class="form-label">Filter by Status</label>
+                <select class="form-select" id="statusFilter" @bind="selectedStatus">
+                    <option value="">All Statuses</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="searchTerm" class="form-label">Search Users</label>
+                <input type="text" class="form-control" id="searchTerm" @bind="searchTerm" placeholder="Search by name or email" />
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Users (@filteredUsers.Count())</h5>
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-sm btn-outline-primary" @onclick="ExportUsers">
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" @onclick="RefreshUsers">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (filteredUsers.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Contact</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>Registration Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var user in filteredUsers)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                                        @user.FirstName.FirstOrDefault()@user.LastName.FirstOrDefault()
+                                                    </div>
+                                                    <div>
+                                                        <div>@user.FirstName @user.LastName</div>
+                                                        <small class="text-muted">ID: @user.Id.Substring(0, 8)</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div>@user.Email</div>
+                                                @if (!string.IsNullOrEmpty(user.PhoneNumber))
+                                                {
+                                                    <small class="text-muted">@user.PhoneNumber</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-@(GetRoleColor(GetRoleDisplay(user)))">
+                                                    @GetRoleDisplay(user)
+                                                </span>
+                                                @if (UserManager.IsInRoleAsync(user, "Doctor").Result)
+                                                {
+                                                    var profile = doctorProfiles.FirstOrDefault(dp => dp.DoctorId == user.Id);
+                                                    if (profile != null)
+                                                    {
+                                                        <div class="mt-1">
+                                                            @if (profile.IsApproved)
+                                                            {
+                                                                <span class="badge bg-success">Approved</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="badge bg-warning">Pending</span>
+                                                            }
+                                                        </div>
+                                                    }
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (user.IsActive)
+                                                {
+                                                    <span class="badge bg-success">Active</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger">Inactive</span>
+                                                }
+                                            </td>
+                                            <td>@user.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <button class="btn btn-sm btn-outline-info" @onclick="() => ViewUserDetails(user.Id)">
+                                                        <i class="bi bi-eye"></i>
+                                                    </button>
+                                                    @if (UserManager.IsInRoleAsync(user, "Doctor").Result)
+                                                    {
+                                                        var profile = doctorProfiles.FirstOrDefault(dp => dp.DoctorId == user.Id);
+                                                        if (profile != null && !profile.IsApproved)
+                                                        {
+                                                            <button class="btn btn-sm btn-outline-success" @onclick="() => ApproveDoctor(user.Id)">
+                                                                <i class="bi bi-check"></i>
+                                                            </button>
+                                                        }
+                                                    }
+                                                    @if (user.IsActive)
+                                                    {
+                                                        <button class="btn btn-sm btn-outline-warning" @onclick="() => DeactivateUser(user.Id)">
+                                                            <i class="bi bi-pause"></i>
+                                                        </button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <button class="btn btn-sm btn-outline-success" @onclick="() => ActivateUser(user.Id)">
+                                                            <i class="bi bi-play"></i>
+                                                        </button>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="mt-3">No users found</h5>
+                            <p class="text-muted">No users match your current filters.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (showUserModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">User Details</h5>
+                    <button type="button" class="btn-close" @onclick="() => showUserModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    @if (selectedUser != null)
+                    {
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Personal Information</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Name:</strong></td>
+                                        <td>@selectedUser.FirstName @selectedUser.LastName</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Email:</strong></td>
+                                        <td>@selectedUser.Email</td>
+                                    </tr>
+                                    @if (!string.IsNullOrEmpty(selectedUser.PhoneNumber))
+                                    {
+                                        <tr>
+                                            <td><strong>Phone:</strong></td>
+                                            <td>@selectedUser.PhoneNumber</td>
+                                        </tr>
+                                    }
+                                    <tr>
+                                        <td><strong>Date of Birth:</strong></td>
+                                        <td>@selectedUser.DateOfBirth.ToString("MMMM dd, yyyy")</td>
+                                    </tr>
+                                    @if (!string.IsNullOrEmpty(selectedUser.Gender))
+                                    {
+                                        <tr>
+                                            <td><strong>Gender:</strong></td>
+                                            <td>@selectedUser.Gender</td>
+                                        </tr>
+                                    }
+                                    <tr>
+                                        <td><strong>Role:</strong></td>
+                                        <td>
+                                            <span class="badge bg-@(GetRoleColor(GetRoleDisplay(selectedUser)))">
+                                                @GetRoleDisplay(selectedUser)
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Status:</strong></td>
+                                        <td>
+                                            @if (selectedUser.IsActive)
+                                            {
+                                                <span class="badge bg-success">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">Inactive</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Registration Date:</strong></td>
+                                        <td>@selectedUser.CreatedAt.ToString("MMMM dd, yyyy")</td>
+                                    </tr>
+                                    @if (selectedUser.LastLoginAt.HasValue)
+                                    {
+                                        <tr>
+                                            <td><strong>Last Login:</strong></td>
+                                            <td>@selectedUser.LastLoginAt.Value.ToString("MMMM dd, yyyy h:mm tt")</td>
+                                        </tr>
+                                    }
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Additional Information</h6>
+                                <table class="table table-sm">
+                                    @if (!string.IsNullOrEmpty(selectedUser.Address))
+                                    {
+                                        <tr>
+                                            <td><strong>Address:</strong></td>
+                                            <td>@selectedUser.Address</td>
+                                        </tr>
+                                    }
+                                    @if (!string.IsNullOrEmpty(selectedUser.NationalId))
+                                    {
+                                        <tr>
+                                            <td><strong>National ID:</strong></td>
+                                            <td>@selectedUser.NationalId</td>
+                                        </tr>
+                                    }
+                                    @if (!string.IsNullOrEmpty(selectedUser.MedicalHistory))
+                                    {
+                                        <tr>
+                                            <td><strong>Medical History:</strong></td>
+                                            <td>@selectedUser.MedicalHistory</td>
+                                        </tr>
+                                    }
+                                    @if (!string.IsNullOrEmpty(selectedUser.EmergencyContactName))
+                                    {
+                                        <tr>
+                                            <td><strong>Emergency Contact:</strong></td>
+                                            <td>@selectedUser.EmergencyContactName</td>
+                                        </tr>
+                                    }
+                                    @if (!string.IsNullOrEmpty(selectedUser.EmergencyContactPhone))
+                                    {
+                                        <tr>
+                                            <td><strong>Emergency Phone:</strong></td>
+                                            <td>@selectedUser.EmergencyContactPhone</td>
+                                        </tr>
+                                    }
+                                </table>
+
+                                @if (UserManager.IsInRoleAsync(selectedUser, "Doctor").Result)
+                                {
+                                    var doctorProfile = doctorProfiles.FirstOrDefault(dp => dp.DoctorId == selectedUser.Id);
+                                    if (doctorProfile != null)
+                                    {
+                                        <div class="mt-3">
+                                            <h6>Doctor Profile</h6>
+                                            <table class="table table-sm">
+                                                <tr>
+                                                    <td><strong>Specialty:</strong></td>
+                                                    <td>@doctorProfile.Specialty.Name</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>License Number:</strong></td>
+                                                    <td>@doctorProfile.LicenseNumber</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Qualifications:</strong></td>
+                                                    <td>@doctorProfile.Qualifications</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Experience:</strong></td>
+                                                    <td>@doctorProfile.Experience</td>
+                                                </tr>
+                                                @if (doctorProfile.ConsultationFee.HasValue)
+                                                {
+                                                    <tr>
+                                                        <td><strong>Consultation Fee:</strong></td>
+                                                        <td>$@doctorProfile.ConsultationFee.Value.ToString("F2")</td>
+                                                    </tr>
+                                                }
+                                                <tr>
+                                                    <td><strong>Approval Status:</strong></td>
+                                                    <td>
+                                                        @if (doctorProfile.IsApproved)
+                                                        {
+                                                            <span class="badge bg-success">Approved</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-warning">Pending</span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => showUserModal = false">Close</button>
+                    @if (selectedUser != null)
+                    {
+                        @if (UserManager.IsInRoleAsync(selectedUser, "Doctor").Result)
+                        {
+                            var profile = doctorProfiles.FirstOrDefault(dp => dp.DoctorId == selectedUser.Id);
+                            if (profile != null && !profile.IsApproved)
+                            {
+                                <button type="button" class="btn btn-success" @onclick="() => ApproveDoctor(selectedUser.Id)">
+                                    Approve Doctor
+                                </button>
+                            }
+                        }
+                        @if (selectedUser.IsActive)
+                        {
+                            <button type="button" class="btn btn-warning" @onclick="() => DeactivateUser(selectedUser.Id)">
+                                Deactivate User
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-success" @onclick="() => ActivateUser(selectedUser.Id)">
+                                Activate User
+                            </button>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private IEnumerable<ApplicationUser> allUsers = new List<ApplicationUser>();
+    private IEnumerable<ApplicationUser> filteredUsers = new List<ApplicationUser>();
+    private IEnumerable<DoctorProfile> doctorProfiles = new List<DoctorProfile>();
+    private ApplicationUser? selectedUser;
+    private string selectedRole = string.Empty;
+    private string selectedStatus = string.Empty;
+    private string searchTerm = string.Empty;
+    private bool showUserModal = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+    }
+
+    private async Task LoadUsers()
+    {
+        allUsers = await UserService.GetAllUsersAsync();
+        doctorProfiles = await UserService.GetDoctorProfilesAsync();
+        await FilterUsers();
+    }
+
+    private async Task FilterUsers()
+    {
+        filteredUsers = allUsers.AsEnumerable();
+
+        // Filter by role
+        if (!string.IsNullOrEmpty(selectedRole))
+        {
+            var roleFilteredUsers = new List<ApplicationUser>();
+            foreach (var user in allUsers)
+            {
+                if (await UserManager.IsInRoleAsync(user, "Patient") && selectedRole == "Patient")
+                    roleFilteredUsers.Add(user);
+                else if (await UserManager.IsInRoleAsync(user, "Doctor") && selectedRole == "Doctor")
+                    roleFilteredUsers.Add(user);
+                else if (await UserManager.IsInRoleAsync(user, "Admin") && selectedRole == "Admin")
+                    roleFilteredUsers.Add(user);
+            }
+            filteredUsers = roleFilteredUsers;
+        }
+
+        // Filter by status
+        if (!string.IsNullOrEmpty(selectedStatus))
+        {
+            filteredUsers = filteredUsers.Where(u => 
+                (selectedStatus == "active" && u.IsActive) ||
+                (selectedStatus == "inactive" && !u.IsActive));
+        }
+
+        // Filter by search term
+        if (!string.IsNullOrEmpty(searchTerm))
+        {
+            filteredUsers = filteredUsers.Where(u => 
+                u.FirstName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                u.LastName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                u.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+        }
+
+        filteredUsers = filteredUsers.OrderByDescending(u => u.CreatedAt);
+    }
+
+    private async Task ViewUserDetails(string userId)
+    {
+        selectedUser = await UserService.GetUserByIdAsync(userId);
+        showUserModal = true;
+    }
+
+    private async Task ApproveDoctor(string doctorId)
+    {
+        try
+        {
+            await UserService.ApproveDoctorProfileAsync(doctorId, "System Admin");
+            await LoadUsers();
+            showUserModal = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error approving doctor: {ex.Message}");
+        }
+    }
+
+    private async Task DeactivateUser(string userId)
+    {
+        try
+        {
+            await UserService.DeactivateUserAsync(userId);
+            await LoadUsers();
+            showUserModal = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deactivating user: {ex.Message}");
+        }
+    }
+
+    private async Task ActivateUser(string userId)
+    {
+        try
+        {
+            await UserService.ActivateUserAsync(userId);
+            await LoadUsers();
+            showUserModal = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error activating user: {ex.Message}");
+        }
+    }
+
+    private void RefreshUsers()
+    {
+        LoadUsers();
+    }
+
+    private void ExportUsers()
+    {
+        // TODO: Implement export functionality
+        Console.WriteLine("Export users functionality to be implemented");
+    }
+
+    private string GetRoleColor(string role)
+    {
+        return role switch
+        {
+            "Patient" => "primary",
+            "Doctor" => "info",
+            "Admin" => "warning",
+            _ => "secondary"
+        };
+    }
+
+    private string GetRoleDisplay(ApplicationUser user)
+    {
+        if (UserManager.IsInRoleAsync(user, "Patient").Result)
+            return "Patient";
+        else if (UserManager.IsInRoleAsync(user, "Doctor").Result)
+            return "Doctor";
+        else if (UserManager.IsInRoleAsync(user, "Admin").Result)
+            return "Admin";
+        return "Unknown";
+    }
+}

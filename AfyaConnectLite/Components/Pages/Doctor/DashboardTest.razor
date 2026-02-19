@@ -1,0 +1,22 @@
+@page "/doctor/dashboard-test"
+@attribute [Authorize(Roles = "Doctor")]
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using AfyaConnectLite.Models
+
+<PageTitle>Doctor Dashboard Test - AfyaConnect Lite</PageTitle>
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h2>Doctor Dashboard Test</h2>
+            <p class="text-muted">Welcome to the dashboard!</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+}

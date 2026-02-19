@@ -1,0 +1,69 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+
+<nav>
+    <ul class="navbar-nav flex-grow-1">
+        <li class="nav-item">
+            <NavLink class="nav-link" href="/">Home</NavLink>
+        </li>
+        <li class="nav-item">
+            <NavLink class="nav-link" href="@GetDashboardUrl()">Dashboard</NavLink>
+        </li>
+        @if (IsUserInRole("Patient"))
+        {
+            <li class="nav-item">
+                <NavLink class="nav-link" href="/patient/book-appointment">Book Appointment</NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="/patient/appointment-history">History</NavLink>
+            </li>
+        }
+        @if (IsUserInRole("Doctor"))
+        {
+            <li class="nav-item">
+                <NavLink class="nav-link" href="/doctor/appointments">Appointments</NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="/doctor/consultation-notes">Notes</NavLink>
+            </li>
+        }
+        @if (IsUserInRole("Admin"))
+        {
+            <li class="nav-item">
+                <NavLink class="nav-link" href="/admin/dashboard">Dashboard</NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="/admin/users">Users</NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="/admin/appointments">Appointments</NavLink>
+            </li>
+        }
+    </ul>
+</nav>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    private ClaimsPrincipal User => AuthenticationState?.Result.User ?? new ClaimsPrincipal();
+
+    private string GetDashboardUrl()
+    {
+        var role = GetUserRole();
+        return $"/{role.ToLower()}/dashboard";
+    }
+
+    private string GetUserRole()
+    {
+        if (User?.IsInRole("Patient") == true) return "Patient";
+        if (User?.IsInRole("Doctor") == true) return "Doctor";
+        if (User?.IsInRole("Admin") == true) return "Admin";
+        return "Patient";
+    }
+
+    private bool IsUserInRole(string role)
+    {
+        return User?.IsInRole(role) == true;
+    }
+}

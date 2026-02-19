@@ -1,0 +1,387 @@
+@page "/admin/dashboard"
+@attribute [Authorize(Roles = "Admin")]
+@using AfyaConnectLite.Models
+@using AfyaConnectLite.Services
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@inject IAppointmentService AppointmentService
+@inject IUserService UserService
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>Admin Dashboard - AfyaConnect Lite</PageTitle>
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h2>Admin Dashboard</h2>
+            <p class="text-muted">System overview and management</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Users</h5>
+                    <h3 class="display-4">@allUsers.Count()</h3>
+                    <small>@newUsers.Count() new this month</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Patients</h5>
+                    <h3 class="display-4">@patients.Count()</h3>
+                    <small>@Math.Round((double)patients.Count() / allUsers.Count() * 100)% of users</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Doctors</h5>
+                    <h3 class="display-4">@doctors.Count()</h3>
+                    <small>@approvedDoctors.Count() approved</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Appointments</h5>
+                    <h3 class="display-4">@allAppointments.Count()</h3>
+                    <small>@todayAppointments.Count() today</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">User Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="h4 text-primary">@patients.Count()</div>
+                            <small class="text-muted">Patients</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="h4 text-info">@doctors.Count()</div>
+                            <small class="text-muted">Doctors</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="h4 text-warning">@admins.Count()</div>
+                            <small class="text-muted">Admins</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Appointment Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="h4 text-success">@completedAppointments.Count()</div>
+                            <small class="text-muted">Completed</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="h4 text-primary">@scheduledAppointments.Count()</div>
+                            <small class="text-muted">Scheduled</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="h4 text-danger">@cancelledAppointments.Count()</div>
+                            <small class="text-muted">Cancelled</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Appointments</h5>
+                    <a href="/admin/appointments" class="btn btn-primary btn-sm">View All</a>
+                </div>
+                <div class="card-body">
+                    @if (recentAppointments.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Patient</th>
+                                        <th>Doctor</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var appointment in recentAppointments.Take(10))
+                                    {
+                                        <tr>
+                                            <td>@appointment.AppointmentDate.ToString("MMM dd, yyyy")</td>
+                                            <td>@appointment.Patient.FirstName @appointment.Patient.LastName</td>
+                                            <td>Dr. @appointment.Doctor.FirstName @appointment.Doctor.LastName</td>
+                                            <td>
+                                                <span class="badge bg-@(GetStatusColor(appointment.Status))">
+                                                    @appointment.Status
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-info" @onclick="() => ViewAppointmentDetails(appointment.Id)">
+                                                    View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No recent appointments.</p>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Pending Doctor Approvals</h5>
+                    <a href="/admin/users" class="btn btn-primary btn-sm">Manage</a>
+                </div>
+                <div class="card-body">
+                    @if (pendingDoctors.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var doctor in pendingDoctors.Take(5))
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">Dr. @doctor.Doctor.FirstName @doctor.Doctor.LastName</h6>
+                                            <small class="text-muted">@doctor.Specialty.Name</small>
+                                        </div>
+                                        <button class="btn btn-sm btn-success" @onclick="() => ApproveDoctor(doctor.DoctorId)">
+                                            Approve
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No pending doctor approvals.</p>
+                    }
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">System Health</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Database Connection</span>
+                            <span class="badge bg-success">Healthy</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>User Authentication</span>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Appointment Service</span>
+                            <span class="badge bg-success">Running</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>System Uptime</span>
+                            <span class="badge bg-info">99.9%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (showAppointmentModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Appointment Details</h5>
+                    <button type="button" class="btn-close" @onclick="() => showAppointmentModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    @if (selectedAppointment != null)
+                    {
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Appointment Information</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Date:</strong></td>
+                                        <td>@selectedAppointment.AppointmentDate.ToString("MMMM dd, yyyy")</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Time:</strong></td>
+                                        <td>@selectedAppointment.AppointmentDate.ToString("h:mm tt")</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Status:</strong></td>
+                                        <td>
+                                            <span class="badge bg-@(GetStatusColor(selectedAppointment.Status))">
+                                                @selectedAppointment.Status
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Reason:</strong></td>
+                                        <td>@selectedAppointment.Reason</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Participants</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Patient:</strong></td>
+                                        <td>@selectedAppointment.Patient.FirstName @selectedAppointment.Patient.LastName</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Doctor:</strong></td>
+                                        <td>Dr. @selectedAppointment.Doctor.FirstName @selectedAppointment.Doctor.LastName</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Created:</strong></td>
+                                        <td>@selectedAppointment.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => showAppointmentModal = false">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private IEnumerable<ApplicationUser> allUsers = new List<ApplicationUser>();
+    private List<ApplicationUser> patients = new List<ApplicationUser>();
+    private List<ApplicationUser> doctors = new List<ApplicationUser>();
+    private List<ApplicationUser> admins = new List<ApplicationUser>();
+    private IEnumerable<ApplicationUser> newUsers = new List<ApplicationUser>();
+    private IEnumerable<DoctorProfile> doctorProfiles = new List<DoctorProfile>();
+    private IEnumerable<DoctorProfile> approvedDoctors = new List<DoctorProfile>();
+    private IEnumerable<DoctorProfile> pendingDoctors = new List<DoctorProfile>();
+    private IEnumerable<Appointment> allAppointments = new List<Appointment>();
+    private IEnumerable<Appointment> todayAppointments = new List<Appointment>();
+    private IEnumerable<Appointment> completedAppointments = new List<Appointment>();
+    private IEnumerable<Appointment> scheduledAppointments = new List<Appointment>();
+    private IEnumerable<Appointment> cancelledAppointments = new List<Appointment>();
+    private IEnumerable<Appointment> recentAppointments = new List<Appointment>();
+    private Appointment? selectedAppointment;
+    private bool showAppointmentModal = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSystemData();
+    }
+
+    private async Task LoadSystemData()
+    {
+        try
+        {
+            // Load users
+            allUsers = await UserService.GetAllUsersAsync();
+            var allUsersList = allUsers.ToList();
+            patients = new List<ApplicationUser>();
+            doctors = new List<ApplicationUser>();
+            admins = new List<ApplicationUser>();
+            
+            foreach (var user in allUsersList)
+            {
+                if (await UserManager.IsInRoleAsync(user, "Patient") && user.IsActive)
+                    patients.Add(user);
+                else if (await UserManager.IsInRoleAsync(user, "Doctor") && user.IsActive)
+                    doctors.Add(user);
+                else if (await UserManager.IsInRoleAsync(user, "Admin") && user.IsActive)
+                    admins.Add(user);
+            }
+            
+            // New users (last 30 days)
+            var thirtyDaysAgo = DateTime.Today.AddDays(-30);
+            newUsers = allUsers.Where(u => u.CreatedAt >= thirtyDaysAgo);
+
+            // Load doctor profiles
+            doctorProfiles = await UserService.GetDoctorProfilesAsync();
+            approvedDoctors = doctorProfiles.Where(dp => dp.IsApproved);
+            pendingDoctors = doctorProfiles.Where(dp => !dp.IsApproved);
+
+            // Load appointments
+            allAppointments = await AppointmentService.GetAllAppointmentsAsync();
+            todayAppointments = allAppointments.Where(a => a.AppointmentDate.Date == DateTime.Today);
+            completedAppointments = allAppointments.Where(a => a.Status == AppointmentStatus.Completed);
+            scheduledAppointments = allAppointments.Where(a => a.Status == AppointmentStatus.Scheduled || a.Status == AppointmentStatus.Confirmed);
+            cancelledAppointments = allAppointments.Where(a => a.Status == AppointmentStatus.Cancelled);
+            recentAppointments = allAppointments.OrderByDescending(a => a.CreatedAt);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading system data: {ex.Message}");
+        }
+    }
+
+    private async Task ViewAppointmentDetails(int appointmentId)
+    {
+        selectedAppointment = await AppointmentService.GetAppointmentByIdAsync(appointmentId);
+        showAppointmentModal = true;
+    }
+
+    private async Task ApproveDoctor(string doctorId)
+    {
+        try
+        {
+            await UserService.ApproveDoctorProfileAsync(doctorId, "System Admin");
+            await LoadSystemData();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error approving doctor: {ex.Message}");
+        }
+    }
+
+    private string GetStatusColor(AppointmentStatus status)
+    {
+        return status switch
+        {
+            AppointmentStatus.Scheduled => "primary",
+            AppointmentStatus.Confirmed => "info",
+            AppointmentStatus.InProgress => "warning",
+            AppointmentStatus.Completed => "success",
+            AppointmentStatus.Cancelled => "danger",
+            AppointmentStatus.NoShow => "secondary",
+            _ => "secondary"
+        };
+    }
+}

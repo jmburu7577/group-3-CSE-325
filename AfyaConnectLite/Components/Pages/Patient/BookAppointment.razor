@@ -1,0 +1,361 @@
+@page "/patient/book-appointment"
+@attribute [Authorize(Roles = "Patient")]
+@using AfyaConnectLite.Models
+@using AfyaConnectLite.Services
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject IAppointmentService AppointmentService
+@inject IUserService UserService
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager NavigationManager
+
+<PageTitle>Book Appointment - AfyaConnect Lite</PageTitle>
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h2>Book Appointment</h2>
+            <p class="text-muted">Schedule your medical consultation with our qualified doctors</p>
+        </div>
+    </div>
+
+    <!-- Success Message -->
+    @if (showSuccess)
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    @successMessage
+                    <button type="button" class="btn-close" @onclick="() => showSuccess = false"></button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Error Message -->
+    @if (showError)
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    @errorMessage
+                    <button type="button" class="btn-close" @onclick="() => showError = false"></button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Appointment Details</h5>
+                </div>
+                <div class="card-body">
+                    <form @onsubmit="HandleSubmit">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="specialty" class="form-label">Medical Specialty</label>
+                                    <select class="form-select" id="specialty" @bind="selectedSpecialtyId">
+                                        <option value="">Select Specialty</option>
+                                        @if (specialties != null)
+                                        {
+                                            @foreach (var specialty in specialties)
+                                            {
+                                                <option value="@specialty.Id">@specialty.Name</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="doctor" class="form-label">Doctor</label>
+                                    <select class="form-select" id="doctor" @bind="appointment.DoctorId" disabled="@string.IsNullOrEmpty(selectedSpecialtyId)">
+                                        <option value="">Select Doctor</option>
+                                        @if (doctors != null)
+                                        {
+                                            @foreach (var doctor in doctors)
+                                            {
+                                                <option value="@doctor.DoctorId">
+                                                    Dr. @doctor.Doctor.FirstName @doctor.Doctor.LastName - @doctor.Specialty.Name
+                                                </option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="appointmentDate" class="form-label">Appointment Date</label>
+                                    <input type="date" class="form-control" id="appointmentDate" @bind="appointment.AppointmentDate" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="appointmentTime" class="form-label">Preferred Time</label>
+                                    <input type="time" class="form-control" id="appointmentTime" @bind="appointmentTime" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="reason" class="form-label">Reason for Visit</label>
+                            <input type="text" class="form-control" id="reason" @bind="appointment.Reason" placeholder="Brief description of your medical concern" required />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="symptoms" class="form-label">Symptoms (Optional)</label>
+                            <textarea class="form-control" id="symptoms" @bind="appointment.Symptoms" rows="3" placeholder="Describe your symptoms in detail"></textarea>
+                        </div>
+
+                        @if (selectedDoctor != null)
+                        {
+                            <div class="alert alert-info">
+                                <h6>Doctor Information</h6>
+                                <p><strong>Dr. @selectedDoctor.Doctor.FirstName @selectedDoctor.Doctor.LastName</strong></p>
+                                <p><strong>Specialty:</strong> @selectedDoctor.Specialty.Name</p>
+                                <p><strong>Qualifications:</strong> @selectedDoctor.Qualifications</p>
+                                <p><strong>Experience:</strong> @selectedDoctor.Experience</p>
+                                @if (selectedDoctor.ConsultationFee.HasValue)
+                                {
+                                    <p><strong>Consultation Fee:</strong> $@selectedDoctor.ConsultationFee.Value.ToString("F2")</p>
+                                }
+                            </div>
+                        }
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary" disabled="@(string.IsNullOrEmpty(appointment.DoctorId) || appointment.AppointmentDate == default)">
+                                Book Appointment
+                            </button>
+                            <button type="button" class="btn btn-secondary" @onclick="GoToDashboard">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Booking Guidelines</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i>
+                            Select your preferred medical specialty
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i>
+                            Choose a qualified doctor
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i>
+                            Pick a convenient date and time
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i>
+                            Provide reason for your visit
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-info-circle text-info"></i>
+                            Appointments can be cancelled 24 hours in advance
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Available Specialties</h5>
+                </div>
+                <div class="card-body">
+                    @if (specialties != null)
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var specialty in specialties.Take(5))
+                            {
+                                <div class="list-group-item">
+                                    <h6 class="mb-1">@specialty.Name</h6>
+                                    <small class="text-muted">@specialty.Description</small>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (showSuccessModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Appointment Booked Successfully!</h5>
+                </div>
+                <div class="modal-body">
+                    <p>Your appointment has been scheduled successfully.</p>
+                    <p><strong>Appointment Details:</strong></p>
+                    <ul>
+                        <li>Date: @appointment.AppointmentDate.ToString("MMMM dd, yyyy")</li>
+                        <li>Time: @appointmentTime</li>
+                        <li>Doctor: Dr. @selectedDoctor?.Doctor.FirstName @selectedDoctor?.Doctor.LastName</li>
+                        <li>Reason: @appointment.Reason</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" @onclick="GoToDashboard">Go to Dashboard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private ApplicationUser? currentUser;
+    private Appointment appointment = new Appointment();
+    private IEnumerable<MedicalSpecialty> specialties = new List<MedicalSpecialty>();
+    private IEnumerable<DoctorProfile> doctors = new List<DoctorProfile>();
+    private DoctorProfile? selectedDoctor;
+    private string selectedSpecialtyId = string.Empty;
+    private TimeOnly appointmentTime = new TimeOnly(9, 0); // Default 9:00 AM
+    private bool showSuccessModal = false;
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    private bool showError = false;
+    private bool showSuccess = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserData();
+        await LoadSpecialties();
+    }
+
+    private async Task LoadUserData()
+    {
+        currentUser = await UserManager.GetUserAsync(User);
+        if (currentUser != null)
+        {
+            appointment.PatientId = currentUser.Id;
+        }
+    }
+
+    private async Task LoadSpecialties()
+    {
+        specialties = await UserService.GetMedicalSpecialtiesAsync();
+    }
+
+    private async Task LoadDoctors()
+    {
+        if (!string.IsNullOrEmpty(selectedSpecialtyId))
+        {
+            var specialtyId = int.Parse(selectedSpecialtyId);
+            doctors = (await UserService.GetDoctorProfilesAsync())
+                .Where(d => d.SpecialtyId == specialtyId && d.IsApproved)
+                .ToList();
+            
+            appointment.DoctorId = string.Empty;
+            selectedDoctor = null;
+        }
+        else
+        {
+            doctors = new List<DoctorProfile>();
+            appointment.DoctorId = string.Empty;
+            selectedDoctor = null;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            // Reset error states
+            showError = false;
+            showSuccess = false;
+            errorMessage = string.Empty;
+            successMessage = string.Empty;
+
+            // Validate form
+            if (string.IsNullOrEmpty(appointment.DoctorId))
+            {
+                errorMessage = "Please select a doctor.";
+                showError = true;
+                return;
+            }
+
+            if (string.IsNullOrEmpty(appointment.Reason))
+            {
+                errorMessage = "Please provide a reason for the appointment.";
+                showError = true;
+                return;
+            }
+
+            if (appointment.AppointmentDate == default)
+            {
+                errorMessage = "Please select a valid appointment date.";
+                showError = true;
+                return;
+            }
+
+            if (appointment.AppointmentDate <= DateTime.Now)
+            {
+                errorMessage = "Appointment date must be in the future.";
+                showError = true;
+                return;
+            }
+
+            // Combine date and time
+            var appointmentDateTime = appointment.AppointmentDate.Date.AddHours(appointmentTime.Hour).AddMinutes(appointmentTime.Minute);
+            appointment.AppointmentDate = appointmentDateTime;
+
+            // Get selected doctor details
+            if (!string.IsNullOrEmpty(appointment.DoctorId))
+            {
+                selectedDoctor = doctors.FirstOrDefault(d => d.DoctorId == appointment.DoctorId);
+                if (selectedDoctor?.ConsultationFee.HasValue == true)
+                {
+                    appointment.ConsultationFee = selectedDoctor.ConsultationFee;
+                }
+            }
+
+            await AppointmentService.CreateAppointmentAsync(appointment);
+            successMessage = "Appointment booked successfully! You will receive a confirmation email.";
+            showSuccess = true;
+            
+            // Reset form
+            appointment = new Appointment();
+            selectedDoctor = null;
+            selectedSpecialtyId = string.Empty;
+            doctors = new List<DoctorProfile>();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error booking appointment: {ex.Message}";
+            showError = true;
+            Console.WriteLine($"Error booking appointment: {ex.Message}");
+        }
+    }
+
+    private void GoToDashboard()
+    {
+        NavigationManager.NavigateTo("/patient/dashboard");
+    }
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    private ClaimsPrincipal User => AuthenticationState?.Result.User ?? new ClaimsPrincipal();
+}

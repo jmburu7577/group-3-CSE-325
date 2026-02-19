@@ -1,0 +1,124 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Authorization
+@using System.Security.Claims
+@inject IAuthorizationService AuthorizationService
+
+<PageTitle>AfyaConnect Lite - Telemedicine Platform</PageTitle>
+
+<div class="hero-section bg-primary text-white py-5 mb-4">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="display-4 fw-bold">AfyaConnect Lite</h1>
+                <p class="lead">Your trusted telemedicine platform for convenient healthcare consultations</p>
+                <p>Book appointments, consult with doctors remotely, and manage your healthcare journey online.</p>
+                @if (User?.Identity?.IsAuthenticated == true)
+                {
+                    <a class="btn btn-light btn-lg" href="/@(GetUserRole().ToLower())}/dashboard">
+                        Go to Dashboard
+                    </a>
+                }
+                else
+                {
+                    <a class="btn btn-light btn-lg me-2" href="/Account/Register">Get Started</a>
+                    <a class="btn btn-outline-light btn-lg" href="/Account/Login">Login</a>
+                }
+            </div>
+            <div class="col-md-6">
+                <div class="text-center">
+                    <i class="bi bi-heart-pulse" style="font-size: 8rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row mb-5">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-check text-primary" style="font-size: 3rem;"></i>
+                    <h5 class="card-title mt-3">Easy Appointment Booking</h5>
+                    <p class="card-text">Schedule medical appointments with just a few clicks. No more waiting in long queues.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-people text-primary" style="font-size: 3rem;"></i>
+                    <h5 class="card-title mt-3">Expert Doctors</h5>
+                    <p class="card-text">Connect with qualified healthcare professionals across various medical specialties.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-shield-check text-primary" style="font-size: 3rem;"></i>
+                    <h5 class="card-title mt-3">Secure & Private</h5>
+                    <p class="card-text">Your medical information is protected with advanced security and privacy measures.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">How It Works</h2>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="text-center">
+                <div class="step-number bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <span class="fw-bold">1</span>
+                </div>
+                <h5>Register</h5>
+                <p>Create your account with your personal information and healthcare needs.</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="text-center">
+                <div class="step-number bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <span class="fw-bold">2</span>
+                </div>
+                <h5>Book Appointment</h5>
+                <p>Choose your preferred doctor and schedule an appointment at your convenience.</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="text-center">
+                <div class="step-number bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <span class="fw-bold">3</span>
+                </div>
+                <h5>Consult & Manage</h5>
+                <p>Attend your consultation and manage your appointment history online.</p>
+            </div>
+        </div>
+    </div>
+
+    @if (User?.Identity?.IsAuthenticated != true)
+    {
+        <div class="text-center py-5 bg-light rounded">
+            <h2>Ready to Get Started?</h2>
+            <p class="lead">Join thousands of patients who trust AfyaConnect Lite for their healthcare needs.</p>
+            <a class="btn btn-primary btn-lg me-2" href="/Account/Register">Register Now</a>
+            <a class="btn btn-outline-primary btn-lg" href="/Account/Login">Login</a>
+        </div>
+    }
+</div>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private ClaimsPrincipal? User => HttpContext?.User;
+
+    private string GetUserRole()
+    {
+        if (User?.IsInRole("Patient") == true) return "Patient";
+        if (User?.IsInRole("Doctor") == true) return "Doctor";
+        if (User?.IsInRole("Admin") == true) return "Admin";
+        return "Patient"; // Default
+    }
+}

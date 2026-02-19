@@ -1,0 +1,254 @@
+@page "/patient/dashboard"
+@attribute [Authorize(Roles = "Patient")]
+@using AfyaConnectLite.Models
+@using AfyaConnectLite.Services
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject IAppointmentService AppointmentService
+@inject IUserService UserService
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>Patient Dashboard - AfyaConnect Lite</PageTitle>
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h2>Patient Dashboard</h2>
+            <p class="text-muted">Welcome back, @currentUser?.FirstName @currentUser?.LastName!</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Upcoming Appointments</h5>
+                    <h3 class="display-4">@upcomingAppointments.Count()</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Completed Appointments</h5>
+                    <h3 class="display-4">@completedAppointments.Count()</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Appointments</h5>
+                    <h3 class="display-4">@allAppointments.Count()</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Next Appointment</h5>
+                    <h5 class="card-title">@(nextAppointment?.AppointmentDate.ToString("MMM dd") ?? "None")</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Upcoming Appointments</h5>
+                    <a href="/patient/book-appointment" class="btn btn-primary btn-sm">Book New Appointment</a>
+                </div>
+                <div class="card-body">
+                    @if (upcomingAppointments.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Doctor</th>
+                                        <th>Reason</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var appointment in upcomingAppointments)
+                                    {
+                                        <tr>
+                                            <td>@appointment.AppointmentDate.ToString("MMM dd, yyyy")</td>
+                                            <td>Dr. @appointment.Doctor.FirstName @appointment.Doctor.LastName</td>
+                                            <td>@appointment.Reason</td>
+                                            <td>
+                                                <span class="badge bg-@(GetStatusColor(appointment.Status))">
+                                                    @appointment.Status
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-danger" @onclick="() => CancelAppointment(appointment.Id)">
+                                                    Cancel
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <p class="text-muted">No upcoming appointments found.</p>
+                            <a href="/patient/book-appointment" class="btn btn-primary">Book Your First Appointment</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="/patient/book-appointment" class="btn btn-primary">Book Appointment</a>
+                        <a href="/patient/appointment-history" class="btn btn-outline-primary">View History</a>
+                        <a href="/patient/profile" class="btn btn-outline-secondary">Update Profile</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    @if (recentAppointments.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var appointment in recentAppointments.Take(3))
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="mb-1">@appointment.Reason</h6>
+                                            <small class="text-muted">@appointment.AppointmentDate.ToString("MMM dd, yyyy")</small>
+                                        </div>
+                                        <span class="badge bg-@(GetStatusColor(appointment.Status))">
+                                            @appointment.Status
+                                        </span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No recent activity.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (showCancelModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cancel Appointment</h5>
+                    <button type="button" class="btn-close" @onclick="() => showCancelModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to cancel this appointment?</p>
+                    <div class="form-group">
+                        <label for="cancellationReason">Reason for cancellation:</label>
+                        <textarea class="form-control" id="cancellationReason" @bind="cancellationReason" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => showCancelModal = false">Close</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmCancel">Cancel Appointment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private ApplicationUser? currentUser;
+    private IEnumerable<Appointment> allAppointments = new List<Appointment>();
+    private IEnumerable<Appointment> upcomingAppointments = new List<Appointment>();
+    private IEnumerable<Appointment> completedAppointments = new List<Appointment>();
+    private IEnumerable<Appointment> recentAppointments = new List<Appointment>();
+    private Appointment? nextAppointment;
+    private bool showCancelModal = false;
+    private int appointmentToCancel = 0;
+    private string cancellationReason = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserData();
+        await LoadAppointments();
+    }
+
+    private async Task LoadUserData()
+    {
+        currentUser = await UserManager.GetUserAsync(User);
+    }
+
+    private async Task LoadAppointments()
+    {
+        if (currentUser != null)
+        {
+            allAppointments = await AppointmentService.GetAppointmentsForPatientAsync(currentUser.Id);
+            upcomingAppointments = allAppointments.Where(a => a.AppointmentDate >= DateTime.Today && a.Status != AppointmentStatus.Cancelled);
+            completedAppointments = allAppointments.Where(a => a.Status == AppointmentStatus.Completed);
+            recentAppointments = allAppointments.OrderByDescending(a => a.CreatedAt);
+            nextAppointment = upcomingAppointments.OrderBy(a => a.AppointmentDate).FirstOrDefault();
+        }
+    }
+
+    private void CancelAppointment(int appointmentId)
+    {
+        appointmentToCancel = appointmentId;
+        showCancelModal = true;
+    }
+
+    private async Task ConfirmCancel()
+    {
+        if (currentUser != null && !string.IsNullOrEmpty(cancellationReason))
+        {
+            await AppointmentService.CancelAppointmentAsync(appointmentToCancel, currentUser.Id, cancellationReason);
+            showCancelModal = false;
+            cancellationReason = string.Empty;
+            await LoadAppointments();
+        }
+    }
+
+    private string GetStatusColor(AppointmentStatus status)
+    {
+        return status switch
+        {
+            AppointmentStatus.Scheduled => "primary",
+            AppointmentStatus.Confirmed => "info",
+            AppointmentStatus.InProgress => "warning",
+            AppointmentStatus.Completed => "success",
+            AppointmentStatus.Cancelled => "danger",
+            AppointmentStatus.NoShow => "secondary",
+            _ => "secondary"
+        };
+    }
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    private ClaimsPrincipal User => AuthenticationState?.Result.User ?? new ClaimsPrincipal();
+}

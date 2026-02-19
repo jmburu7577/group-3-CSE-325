@@ -1,0 +1,14 @@
+C:\Users\BYU\Desktop\group-3-CSE-325\Tools\UiTester\bin\Debug\net8.0\UiTester.exe
+C:\Users\BYU\Desktop\group-3-CSE-325\Tools\UiTester\bin\Debug\net8.0\UiTester.deps.json
+C:\Users\BYU\Desktop\group-3-CSE-325\Tools\UiTester\bin\Debug\net8.0\UiTester.runtimeconfig.json
+C:\Users\BYU\Desktop\group-3-CSE-325\Tools\UiTester\bin\Debug\net8.0\UiTester.dll
+C:\Users\BYU\Desktop\group-3-CSE-325\Tools\UiTester\bin\Debug\net8.0\UiTester.pdb
+C:\Users\BYU\Desktop\group-3-CSE-325\Tools\UiTester\obj\Debug\net8.0\UiTester.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\BYU\Desktop\group-3-CSE-325\Tools\UiTester\obj\Debug\net8.0\UiTester.AssemblyInfoInputs.cache
+C:\Users\BYU\Desktop\group-3-CSE-325\Tools\UiTester\obj\Debug\net8.0\UiTester.AssemblyInfo.cs
+C:\Users\BYU\Desktop\group-3-CSE-325\Tools\UiTester\obj\Debug\net8.0\UiTester.csproj.CoreCompileInputs.cache
+C:\Users\BYU\Desktop\group-3-CSE-325\Tools\UiTester\obj\Debug\net8.0\UiTester.dll
+C:\Users\BYU\Desktop\group-3-CSE-325\Tools\UiTester\obj\Debug\net8.0\refint\UiTester.dll
+C:\Users\BYU\Desktop\group-3-CSE-325\Tools\UiTester\obj\Debug\net8.0\UiTester.pdb
+C:\Users\BYU\Desktop\group-3-CSE-325\Tools\UiTester\obj\Debug\net8.0\UiTester.genruntimeconfig.cache
+C:\Users\BYU\Desktop\group-3-CSE-325\Tools\UiTester\obj\Debug\net8.0\ref\UiTester.dll

@@ -1,0 +1,468 @@
+@page "/doctor/dashboard"
+@attribute [Authorize(Roles = "Doctor")]
+@using AfyaConnectLite.Models
+@using AfyaConnectLite.Services
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject IAppointmentService AppointmentService
+@inject IUserService UserService
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>Doctor Dashboard - AfyaConnect Lite</PageTitle>
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h2>Doctor Dashboard</h2>
+            <p class="text-muted">Welcome back, Dr. @(currentUser?.FirstName ?? "") @(currentUser?.LastName ?? "")!</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Today's Appointments</h5>
+                    <h3 class="display-4">@todaysAppointments.Count()</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Completed Today</h5>
+                    <h3 class="display-4">@completedTodayAppointments.Count()</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Upcoming</h5>
+                    <h3 class="display-4">@upcomingAppointments.Count()</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Patients</h5>
+                    <h3 class="display-4">@uniquePatients.Count()</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Today's Schedule</h5>
+                    <a href="/doctor/appointments" class="btn btn-primary btn-sm">View All Appointments</a>
+                </div>
+                <div class="card-body">
+                    @if (todaysAppointments.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Patient</th>
+                                        <th>Reason</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var appointment in todaysAppointments.OrderBy(a => a.AppointmentDate))
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div>@appointment.AppointmentDate.ToString("h:mm tt")</div>
+                                                <small class="text-muted">@(appointment.AppointmentDate - DateTime.Now).Hours hrs</small>
+                                            </td>
+                                            <td>
+                                                <div>@appointment.Patient.FirstName @appointment.Patient.LastName</div>
+                                                <small class="text-muted">@appointment.Patient.Email</small>
+                                            </td>
+                                            <td>@appointment.Reason</td>
+                                            <td>
+                                                <span class="badge bg-@(GetStatusColor(appointment.Status))">
+                                                    @appointment.Status
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    @if (appointment.Status == AppointmentStatus.Scheduled)
+                                                    {
+                                                        <button class="btn btn-sm btn-outline-success" @onclick="() => StartAppointment(appointment.Id)">
+                                                            Start
+                                                        </button>
+                                                    }
+                                                    @if (appointment.Status == AppointmentStatus.InProgress)
+                                                    {
+                                                        <button class="btn btn-sm btn-outline-primary" @onclick="() => AddNotes(appointment.Id)">
+                                                            Add Notes
+                                                        </button>
+                                                        <button class="btn btn-sm btn-outline-success" @onclick="() => CompleteAppointment(appointment.Id)">
+                                                            Complete
+                                                        </button>
+                                                    }
+                                                    <button class="btn btn-sm btn-outline-info" @onclick="() => ViewPatientDetails(appointment.PatientId)">
+                                                        Patient Info
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="mt-3">No appointments today</h5>
+                            <p class="text-muted">You have a free schedule today.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="/doctor/appointments" class="btn btn-primary">All Appointments</a>
+                        <a href="/doctor/profile" class="btn btn-outline-primary">Update Profile</a>
+                        <a href="/doctor/consultation-notes" class="btn btn-outline-secondary">Consultation Notes</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Profile Summary</h5>
+                </div>
+                <div class="card-body">
+                    @if (doctorProfile != null)
+                    {
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item">
+                                <h6 class="mb-1">Specialty</h6>
+                                <p class="mb-1">@doctorProfile.Specialty.Name</p>
+                                <small class="text-muted">@doctorProfile.Specialty.Description</small>
+                            </div>
+                            <div class="list-group-item">
+                                <h6 class="mb-1">Consultation Fee</h6>
+                                <p class="mb-1">$@doctorProfile.ConsultationFee?.ToString("F2")</p>
+                            </div>
+                            <div class="list-group-item">
+                                <h6 class="mb-1">Status</h6>
+                                <p class="mb-1">
+                                    @if (doctorProfile.IsApproved)
+                                    {
+                                        <span class="badge bg-success">Approved</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning">Pending Approval</span>
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Profile not available.</p>
+                    }
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Patients</h5>
+                </div>
+                <div class="card-body">
+                    @if (recentPatients.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var patient in recentPatients.Take(5))
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="mb-1">@patient.FirstName @patient.LastName</h6>
+                                            <small class="text-muted">@patient.Email</small>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-info" @onclick="() => ViewPatientDetails(patient.Id)">
+                                            View
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No recent patients.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (showPatientModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Patient Information</h5>
+                    <button type="button" class="btn-close" @onclick="() => showPatientModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    @if (selectedPatient != null)
+                    {
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Personal Information</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Name:</strong></td>
+                                        <td>@selectedPatient.FirstName @selectedPatient.LastName</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Email:</strong></td>
+                                        <td>@selectedPatient.Email</td>
+                                    </tr>
+                                    @if (!string.IsNullOrEmpty(selectedPatient.PhoneNumber))
+                                    {
+                                        <tr>
+                                            <td><strong>Phone:</strong></td>
+                                            <td>@selectedPatient.PhoneNumber</td>
+                                        </tr>
+                                    }
+                                    <tr>
+                                        <td><strong>Date of Birth:</strong></td>
+                                        <td>@selectedPatient.DateOfBirth.ToString("MMMM dd, yyyy")</td>
+                                    </tr>
+                                    @if (!string.IsNullOrEmpty(selectedPatient.Gender))
+                                    {
+                                        <tr>
+                                            <td><strong>Gender:</strong></td>
+                                            <td>@selectedPatient.Gender</td>
+                                        </tr>
+                                    }
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Medical Information</h6>
+                                <table class="table table-sm">
+                                    @if (!string.IsNullOrEmpty(selectedPatient.Address))
+                                    {
+                                        <tr>
+                                            <td><strong>Address:</strong></td>
+                                            <td>@selectedPatient.Address</td>
+                                        </tr>
+                                    }
+                                    @if (!string.IsNullOrEmpty(selectedPatient.MedicalHistory))
+                                    {
+                                        <tr>
+                                            <td><strong>Medical History:</strong></td>
+                                            <td>@selectedPatient.MedicalHistory</td>
+                                        </tr>
+                                    }
+                                    @if (!string.IsNullOrEmpty(selectedPatient.EmergencyContactName))
+                                    {
+                                        <tr>
+                                            <td><strong>Emergency Contact:</strong></td>
+                                            <td>@selectedPatient.EmergencyContactName</td>
+                                        </tr>
+                                    }
+                                    @if (!string.IsNullOrEmpty(selectedPatient.EmergencyContactPhone))
+                                    {
+                                        <tr>
+                                            <td><strong>Emergency Phone:</strong></td>
+                                            <td>@selectedPatient.EmergencyContactPhone</td>
+                                        </tr>
+                                    }
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <h6>Appointment History</h6>
+                            @if (patientAppointments.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Reason</th>
+                                                <th>Status</th>
+                                                <th>Notes</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var apt in patientAppointments.OrderByDescending(a => a.AppointmentDate))
+                                            {
+                                                <tr>
+                                                    <td>@apt.AppointmentDate.ToString("MMM dd, yyyy")</td>
+                                                    <td>@apt.Reason</td>
+                                                    <td>
+                                                        <span class="badge bg-@(GetStatusColor(apt.Status))">
+                                                            @apt.Status
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        @if (!string.IsNullOrEmpty(apt.BasicConsultationNotes))
+                                                        {
+                                                            <span class="text-truncate d-inline-block" style="max-width: 150px;">
+                                                                @apt.BasicConsultationNotes
+                                                            </span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-muted">None</span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted">No previous appointments.</p>
+                            }
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => showPatientModal = false">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private ApplicationUser? currentUser;
+    private DoctorProfile? doctorProfile = new DoctorProfile();
+    private IEnumerable<Appointment> allAppointments = new List<Appointment>();
+    private IEnumerable<Appointment> todaysAppointments = new List<Appointment>();
+    private IEnumerable<Appointment> upcomingAppointments = new List<Appointment>();
+    private IEnumerable<Appointment> completedTodayAppointments = new List<Appointment>();
+    private IEnumerable<ApplicationUser> uniquePatients = new List<ApplicationUser>();
+    private IEnumerable<ApplicationUser> recentPatients = new List<ApplicationUser>();
+    private ApplicationUser? selectedPatient;
+    private IEnumerable<Appointment> patientAppointments = new List<Appointment>();
+    private bool showPatientModal = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserData();
+        await LoadAppointments();
+        await LoadDoctorProfile();
+    }
+
+    private async Task LoadUserData()
+    {
+        if (AuthenticationState != null)
+        {
+            var authState = await AuthenticationState;
+            currentUser = await UserManager.GetUserAsync(authState.User);
+        }
+    }
+
+    private async Task LoadAppointments()
+    {
+        if (currentUser != null)
+        {
+            allAppointments = await AppointmentService.GetAppointmentsForDoctorAsync(currentUser.Id);
+            todaysAppointments = allAppointments.Where(a => a.AppointmentDate.Date == DateTime.Today);
+            upcomingAppointments = allAppointments.Where(a => a.AppointmentDate.Date > DateTime.Today);
+            completedTodayAppointments = allAppointments.Where(a => 
+                a.AppointmentDate.Date == DateTime.Today && a.Status == AppointmentStatus.Completed);
+            
+            // Get unique patients
+            uniquePatients = allAppointments.Select(a => a.Patient).Distinct().ToList();
+            
+            // Get recent patients (from last 30 days)
+            var thirtyDaysAgo = DateTime.Today.AddDays(-30);
+            recentPatients = allAppointments
+                .Where(a => a.AppointmentDate >= thirtyDaysAgo)
+                .Select(a => a.Patient)
+                .Distinct()
+                .OrderByDescending(p => p.CreatedAt)
+                .ToList();
+        }
+    }
+
+    private async Task LoadDoctorProfile()
+    {
+        if (currentUser != null)
+        {
+            doctorProfile = await UserService.GetDoctorProfileAsync(currentUser.Id);
+        }
+    }
+
+    private async Task ViewPatientDetails(string patientId)
+    {
+        selectedPatient = await UserService.GetUserByIdAsync(patientId);
+        if (selectedPatient != null && currentUser != null)
+        {
+            patientAppointments = await AppointmentService.GetAppointmentsForDoctorAsync(currentUser.Id);
+            patientAppointments = patientAppointments.Where(a => a.PatientId == patientId);
+        }
+        showPatientModal = true;
+    }
+
+    private async Task StartAppointment(int appointmentId)
+    {
+        await AppointmentService.UpdateAppointmentStatusAsync(appointmentId, AppointmentStatus.InProgress);
+        await LoadAppointments();
+    }
+
+    private async Task CompleteAppointment(int appointmentId)
+    {
+        await AppointmentService.UpdateAppointmentStatusAsync(appointmentId, AppointmentStatus.Completed);
+        await LoadAppointments();
+    }
+
+    private void AddNotes(int appointmentId)
+    {
+        // Navigate to consultation notes page
+        // NavigationManager.NavigateTo($"/doctor/consultation-notes/{appointmentId}");
+    }
+
+    private string GetStatusColor(AppointmentStatus status)
+    {
+        return status switch
+        {
+            AppointmentStatus.Scheduled => "primary",
+            AppointmentStatus.Confirmed => "info",
+            AppointmentStatus.InProgress => "warning",
+            AppointmentStatus.Completed => "success",
+            AppointmentStatus.Cancelled => "danger",
+            AppointmentStatus.NoShow => "secondary",
+            _ => "secondary"
+        };
+    }
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    private ClaimsPrincipal User => AuthenticationState?.Result?.User ?? new ClaimsPrincipal();
+}
