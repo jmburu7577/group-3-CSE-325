@@ -8,18 +8,20 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
+# Clear NuGet cache to avoid package conflicts
+RUN dotnet nuget locals all --clear
+
 # Copy csproj and restore as distinct layers
 COPY ["AfyaConnectLite.csproj", "."]
-RUN dotnet restore "./AfyaConnectLite.csproj"
+RUN dotnet restore "./AfyaConnectLite.csproj" --no-cache
 
 # Copy the rest of the files and build
 COPY . .
-WORKDIR "/src/."
-RUN dotnet build "AfyaConnectLite.csproj" -c Release -o /app/build
+RUN dotnet build "AfyaConnectLite.csproj" -c Release -o /app/build --no-restore
 
 # Publish the application
 FROM build AS publish
-RUN dotnet publish "AfyaConnectLite.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "AfyaConnectLite.csproj" -c Release -o /app/publish --no-restore
 
 # Build the final runtime image
 FROM base AS final
