@@ -17,11 +17,11 @@ RUN dotnet restore "./AfyaConnectLite.csproj" --no-cache
 
 # Copy the rest of the files and build
 COPY . .
-RUN dotnet build "AfyaConnectLite.csproj" -c Release -o /app/build --no-restore
+RUN dotnet build "AfyaConnectLite.csproj" -c Release -o /app/build
 
-# Publish the application
+# Publish the application (allow restore to ensure all packages are available)
 FROM build AS publish
-RUN dotnet publish "AfyaConnectLite.csproj" -c Release -o /app/publish --no-restore
+RUN dotnet publish "AfyaConnectLite.csproj" -c Release -o /app/publish
 
 # Build the final runtime image
 FROM base AS final
