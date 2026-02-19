@@ -50,3 +50,4 @@ C:\Users\BYU\Desktop\group-3-CSE-325\Tools\ModelIntegrationTester\obj\Debug\net8
 C:\Users\BYU\Desktop\group-3-CSE-325\Tools\ModelIntegrationTester\obj\Debug\net8.0\ModelIntegrationTester.pdb
 C:\Users\BYU\Desktop\group-3-CSE-325\Tools\ModelIntegrationTester\obj\Debug\net8.0\ModelIntegrationTester.genruntimeconfig.cache
 C:\Users\BYU\Desktop\group-3-CSE-325\Tools\ModelIntegrationTester\obj\Debug\net8.0\ref\ModelIntegrationTester.dll
+C:\Users\BYU\Desktop\group-3-CSE-325\Tools\ModelIntegrationTester\obj\Debug\net8.0\ModelIntegrationTester.sourcelink.json

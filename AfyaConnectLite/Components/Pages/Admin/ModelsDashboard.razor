@@ -138,13 +138,33 @@ else
             .OrderByDescending(a => a.AppointmentDate)
             .Take(200)
             .ToListAsync();
-        notes = await Db.ConsultationNotes
-            .Include(n => n.Patient)
-            .Include(n => n.Doctor)
-            .AsNoTracking()
-            .OrderByDescending(n => n.Id)
-            .Take(200)
-            .ToListAsync();
+        // Load consultation notes via raw DB query to avoid EF relationship mapping issues
+        notes = new List<ConsultationNote>();
+        var conn = Db.Database.GetDbConnection();
+        await conn.OpenAsync();
+        try
+        {
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT Id, AppointmentId, DoctorId, Notes, CreatedAt, UpdatedAt, ApplicationUserId FROM ConsultationNotes ORDER BY Id DESC LIMIT 200";
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var n = new ConsultationNote();
+                n.Id = reader.GetInt32(0);
+                n.AppointmentId = reader.GetInt32(1);
+                n.DoctorId = reader.GetString(2);
+                n.Notes = reader.GetString(3);
+                n.CreatedAt = reader.GetDateTime(4);
+                n.UpdatedAt = reader.IsDBNull(5) ? null : reader.GetDateTime(5);
+                // application user id stored in column ApplicationUserId corresponds to PatientId domain property
+                n.PatientId = reader.IsDBNull(6) ? string.Empty : reader.GetString(6);
+                notes.Add(n);
+            }
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
         doctorProfiles = await Db.DoctorProfiles
             .Include(d => d.Doctor)
             .Include(d => d.Specialty)

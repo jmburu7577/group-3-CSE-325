@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "HjKRzyYF5uA8nzxsgLOFrL6wUT5nANOly9ICfPqAcXg=",
+  "Hash": "5EO3ZlC7F0h71n0v2u8ZdjjWewotpQ2EFyuBd2YU2Fg=",
   "Source": "AfyaConnectLite",
   "BasePath": "_content/AfyaConnectLite",
   "Mode": "Default",
@@ -10,17 +10,17 @@
     {
       "Name": "AfyaConnectLite\\wwwroot",
       "Source": "AfyaConnectLite",
-      "ContentRoot": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\",
+      "ContentRoot": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\",
       "BasePath": "_content/AfyaConnectLite",
       "Pattern": "**"
     }
   ],
   "Assets": [
     {
-      "Identity": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\obj\\Debug\\net8.0\\scopedcss\\bundle\\AfyaConnectLite.styles.css",
+      "Identity": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\obj\\Debug\\net8.0\\scopedcss\\bundle\\AfyaConnectLite.styles.css",
       "SourceId": "AfyaConnectLite",
       "SourceType": "Computed",
-      "ContentRoot": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\obj\\Debug\\net8.0\\scopedcss\\bundle\\",
+      "ContentRoot": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\obj\\Debug\\net8.0\\scopedcss\\bundle\\",
       "BasePath": "_content/AfyaConnectLite",
       "RelativePath": "AfyaConnectLite.styles.css",
       "AssetKind": "All",
@@ -33,13 +33,13 @@
       "AssetTraitValue": "ApplicationBundle",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\obj\\Debug\\net8.0\\scopedcss\\bundle\\AfyaConnectLite.styles.css"
+      "OriginalItemSpec": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\obj\\Debug\\net8.0\\scopedcss\\bundle\\AfyaConnectLite.styles.css"
     },
     {
-      "Identity": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\AfyaConnectLite.bundle.scp.css",
+      "Identity": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\AfyaConnectLite.bundle.scp.css",
       "SourceId": "AfyaConnectLite",
       "SourceType": "Computed",
-      "ContentRoot": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\",
+      "ContentRoot": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\",
       "BasePath": "_content/AfyaConnectLite",
       "RelativePath": "AfyaConnectLite.bundle.scp.css",
       "AssetKind": "All",
@@ -52,13 +52,13 @@
       "AssetTraitValue": "ProjectBundle",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\AfyaConnectLite.bundle.scp.css"
+      "OriginalItemSpec": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\AfyaConnectLite.bundle.scp.css"
     },
     {
-      "Identity": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\app.css",
+      "Identity": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\app.css",
       "SourceId": "AfyaConnectLite",
       "SourceType": "Discovered",
-      "ContentRoot": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\",
+      "ContentRoot": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\",
       "BasePath": "_content/AfyaConnectLite",
       "RelativePath": "app.css",
       "AssetKind": "All",
@@ -74,10 +74,10 @@
       "OriginalItemSpec": "wwwroot\\app.css"
     },
     {
-      "Identity": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\bootstrap\\bootstrap.min.css",
+      "Identity": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\bootstrap\\bootstrap.min.css",
       "SourceId": "AfyaConnectLite",
       "SourceType": "Discovered",
-      "ContentRoot": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\",
+      "ContentRoot": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\",
       "BasePath": "_content/AfyaConnectLite",
       "RelativePath": "bootstrap/bootstrap.min.css",
       "AssetKind": "All",
@@ -93,10 +93,10 @@
       "OriginalItemSpec": "wwwroot\\bootstrap\\bootstrap.min.css"
     },
     {
-      "Identity": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\bootstrap\\bootstrap.min.css.map",
+      "Identity": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\bootstrap\\bootstrap.min.css.map",
       "SourceId": "AfyaConnectLite",
       "SourceType": "Discovered",
-      "ContentRoot": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\",
+      "ContentRoot": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\",
       "BasePath": "_content/AfyaConnectLite",
       "RelativePath": "bootstrap/bootstrap.min.css.map",
       "AssetKind": "All",
@@ -112,10 +112,10 @@
       "OriginalItemSpec": "wwwroot\\bootstrap\\bootstrap.min.css.map"
     },
     {
-      "Identity": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\favicon.png",
+      "Identity": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\favicon.png",
       "SourceId": "AfyaConnectLite",
       "SourceType": "Discovered",
-      "ContentRoot": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\",
+      "ContentRoot": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\",
       "BasePath": "_content/AfyaConnectLite",
       "RelativePath": "favicon.png",
       "AssetKind": "All",

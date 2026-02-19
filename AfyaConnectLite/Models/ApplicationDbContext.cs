@@ -68,7 +68,11 @@ namespace AfyaConnectLite.Models
                 entity.HasOne(e => e.Patient)
                     .WithMany()
                     .HasForeignKey(e => e.PatientId)
+                    .HasConstraintName("FK_ConsultationNotes_AspNetUsers_ApplicationUserId")
                     .OnDelete(DeleteBehavior.Restrict);
+
+                // Map domain property PatientId to the actual DB column name used in migrations
+                entity.Property(e => e.PatientId).HasColumnName("ApplicationUserId");
 
                 entity.HasOne(e => e.Doctor)
                     .WithMany()
