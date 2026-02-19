@@ -1,23 +1,23 @@
 {
   "Files": [
     {
-      "Id": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\AfyaConnectLite.bundle.scp.css",
+      "Id": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\AfyaConnectLite.bundle.scp.css",
       "PackagePath": "staticwebassets\\AfyaConnectLite.bundle.scp.css"
     },
     {
-      "Id": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\app.css",
+      "Id": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\app.css",
       "PackagePath": "staticwebassets\\app.css"
     },
     {
-      "Id": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\bootstrap\\bootstrap.min.css",
+      "Id": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\bootstrap\\bootstrap.min.css",
       "PackagePath": "staticwebassets\\bootstrap\\bootstrap.min.css"
     },
     {
-      "Id": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\bootstrap\\bootstrap.min.css.map",
+      "Id": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\bootstrap\\bootstrap.min.css.map",
       "PackagePath": "staticwebassets\\bootstrap\\bootstrap.min.css.map"
     },
     {
-      "Id": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\favicon.png",
+      "Id": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\wwwroot\\favicon.png",
       "PackagePath": "staticwebassets\\favicon.png"
     },
     {

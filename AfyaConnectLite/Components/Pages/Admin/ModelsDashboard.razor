@@ -1,0 +1,163 @@
+@page "/admin/models-dashboard"
+@using AfyaConnectLite.Models
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext Db
+
+<h3>Models Dashboard</h3>
+
+<div class="btn-group my-2" role="group">
+    <button class="btn btn-outline-primary" @onclick=@(() => SelectTab("Users"))>Users</button>
+    <button class="btn btn-outline-primary" @onclick=@(() => SelectTab("Appointments"))>Appointments</button>
+    <button class="btn btn-outline-primary" @onclick=@(() => SelectTab("ConsultationNotes"))>Consultation Notes</button>
+    <button class="btn btn-outline-primary" @onclick=@(() => SelectTab("DoctorProfiles"))>Doctor Profiles</button>
+    <button class="btn btn-outline-primary" @onclick=@(() => SelectTab("MedicalSpecialties"))>Specialties</button>
+</div>
+
+@if (isLoading)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    @if (activeTab == "Users")
+    {
+        <h4>Users</h4>
+        <table class="table table-sm">
+            <thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Active</th></tr></thead>
+            <tbody>
+            @foreach (var u in users)
+            {
+                <tr>
+                    <td>@u.Email</td>
+                    <td>@(u.FirstName) @(u.LastName)</td>
+                    <td>@u.Role</td>
+                    <td>@u.IsActive</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    else if (activeTab == "Appointments")
+    {
+        <h4>Appointments</h4>
+        <table class="table table-sm">
+            <thead><tr><th>Id</th><th>Date</th><th>Patient</th><th>Doctor</th><th>Status</th></tr></thead>
+            <tbody>
+            @foreach (var a in appointments)
+            {
+                <tr>
+                    <td>@a.Id</td>
+                    <td>@a.AppointmentDate.ToString("g")</td>
+                    <td>@(a.Patient?.Email ?? (a.PatientId?.ToString() ?? "-"))</td>
+                    <td>@(a.Doctor?.Email ?? (a.DoctorId?.ToString() ?? "-"))</td>
+                    <td>@a.Status</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    else if (activeTab == "ConsultationNotes")
+    {
+        <h4>Consultation Notes</h4>
+        <table class="table table-sm">
+            <thead><tr><th>Id</th><th>AppointmentId</th><th>Patient</th><th>Doctor</th><th>Notes</th></tr></thead>
+            <tbody>
+            @foreach (var n in notes)
+            {
+                <tr>
+                    <td>@n.Id</td>
+                    <td>@n.AppointmentId</td>
+                    <td>@(n.Patient?.Email ?? "-")</td>
+                    <td>@(n.Doctor?.Email ?? "-")</td>
+                    <td>@(n.Notes?.Length > 120 ? n.Notes.Substring(0, 120) + "..." : n.Notes)</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    else if (activeTab == "DoctorProfiles")
+    {
+        <h4>Doctor Profiles</h4>
+        <table class="table table-sm">
+            <thead><tr><th>Id</th><th>Doctor</th><th>Specialty</th><th>Approved</th></tr></thead>
+            <tbody>
+            @foreach (var d in doctorProfiles)
+            {
+                <tr>
+                    <td>@d.Id</td>
+                    <td>@(d.Doctor?.Email ?? "-")</td>
+                    <td>@(d.Specialty?.Name ?? "-")</td>
+                    <td>@d.IsApproved</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    else if (activeTab == "MedicalSpecialties")
+    {
+        <h4>Medical Specialties</h4>
+        <table class="table table-sm">
+            <thead><tr><th>Id</th><th>Name</th><th>Active</th></tr></thead>
+            <tbody>
+            @foreach (var s in specialties)
+            {
+                <tr>
+                    <td>@s.Id</td>
+                    <td>@s.Name</td>
+                    <td>@s.IsActive</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    private bool isLoading = true;
+    private string activeTab = "Users";
+
+    private List<ApplicationUser> users = new();
+    private List<Appointment> appointments = new();
+    private List<ConsultationNote> notes = new();
+    private List<DoctorProfile> doctorProfiles = new();
+    private List<MedicalSpecialty> specialties = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        isLoading = true;
+        users = await Db.Users.AsNoTracking().Take(200).ToListAsync();
+        appointments = await Db.Appointments
+            .Include(a => a.Patient)
+            .Include(a => a.Doctor)
+            .AsNoTracking()
+            .OrderByDescending(a => a.AppointmentDate)
+            .Take(200)
+            .ToListAsync();
+        notes = await Db.ConsultationNotes
+            .Include(n => n.Patient)
+            .Include(n => n.Doctor)
+            .AsNoTracking()
+            .OrderByDescending(n => n.Id)
+            .Take(200)
+            .ToListAsync();
+        doctorProfiles = await Db.DoctorProfiles
+            .Include(d => d.Doctor)
+            .Include(d => d.Specialty)
+            .AsNoTracking()
+            .Take(200)
+            .ToListAsync();
+        specialties = await Db.MedicalSpecialties.AsNoTracking().ToListAsync();
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private void SelectTab(string tab)
+    {
+        activeTab = tab;
+    }
+}

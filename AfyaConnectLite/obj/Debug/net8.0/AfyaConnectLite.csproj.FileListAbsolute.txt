@@ -127,3 +127,4 @@ C:\Users\BYU\Desktop\group-3-CSE-325\AfyaConnectLite\obj\Debug\net8.0\AfyaConnec
 C:\Users\BYU\Desktop\group-3-CSE-325\AfyaConnectLite\obj\Debug\net8.0\ref\AfyaConnectLite.dll
 C:\Users\BYU\Desktop\group-3-CSE-325\AfyaConnectLite\obj\Debug\net8.0\AfyaConnectLite.RazorAssemblyInfo.cache
 C:\Users\BYU\Desktop\group-3-CSE-325\AfyaConnectLite\obj\Debug\net8.0\AfyaConnectLite.RazorAssemblyInfo.cs
+c:\Users\BYU\Desktop\group-3-CSE-325\AfyaConnectLite\obj\Debug\net8.0\AfyaConnectLite.sourcelink.json

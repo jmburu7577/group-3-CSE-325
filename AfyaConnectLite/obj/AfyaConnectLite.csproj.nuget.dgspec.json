@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\AfyaConnectLite.csproj": {}
+    "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\AfyaConnectLite.csproj": {}
   },
   "projects": {
-    "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\AfyaConnectLite.csproj": {
+    "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\AfyaConnectLite.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\AfyaConnectLite.csproj",
+        "projectUniqueName": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\AfyaConnectLite.csproj",
         "projectName": "AfyaConnectLite",
-        "projectPath": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\AfyaConnectLite.csproj",
+        "projectPath": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\AfyaConnectLite.csproj",
         "packagesPath": "C:\\Users\\BYU\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\obj\\",
+        "outputPath": "c:\\Users\\BYU\\Desktop\\group-3-CSE-325\\AfyaConnectLite\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\BYU\\AppData\\Roaming\\NuGet\\NuGet.Config"
