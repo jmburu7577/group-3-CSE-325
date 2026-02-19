@@ -1,0 +1,9 @@
+.vs/
+bin/
+obj/
+node_modules/
+*.db
+*.log
+.vscode/
+.git/
+Tools/playwright/test-results/
